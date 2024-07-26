@@ -1,0 +1,67 @@
+services:
+  mysql:
+    image: mysql
+    container_name: local_mysql
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABSE: exercice_todolist_spring_security      
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user
+    volumes:
+      - local_mysqldata:/var/lib/mysql
+    networks:
+      - todolist
+
+  phpmyadmin:
+    depends_on:
+      - mysql
+    image: phpmyadmin
+    container_name: phpmyadmin_container  
+    restart: always
+    ports:
+      - "8033:80"   
+    links: 
+      - mysql 
+    environment:      
+      PMA_HOST: local_mysql      
+      #PMA_ARBITRARY: 1   
+    networks:
+      - todolist
+  
+  back_spring_api:
+    depends_on:
+      - mysql  
+    container_name: back_todolist
+    build:
+      context: ./03_exercice_todolist
+      dockerfile: dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://local_mysql/exercice_todolist_spring_security
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root      
+    ports:
+      - "8080:8080"
+    networks:
+      - todolist
+
+  front_react:
+    depends_on:
+      - back_spring_api
+    container_name: front_todolist
+    build: 
+      context: ./03_exercice_todolist_frontReact
+      dockerfile: dockerfile
+    ports:
+      - "80:80"
+    networks:
+      - todolist
+
+
+volumes:
+  local_mysqldata:
+
+networks:
+  todolist:
